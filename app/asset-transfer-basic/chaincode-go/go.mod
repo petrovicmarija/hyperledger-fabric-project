@@ -1,6 +1,6 @@
 module github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go
 
-go 1.14
+go 1.13
 
 require (
 	github.com/golang/protobuf v1.3.2
