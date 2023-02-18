@@ -132,6 +132,20 @@ installChaincode() {
   successln "Chaincode is installed on peer0.org${ORG}"
 }
 
+installChaincodeOnPeer() {
+  ORG=$1
+  PEER_PORT=$2
+  PEER_NUME=$3
+  setGlobalsPeers $ORG $PEER_PORT
+  set -x
+  peer lifecycle chaincode install ${CC_NAME}.tar.gz >&log.txt
+  res=$?
+  { set +x; } 2>/dev/null
+  cat log.txt
+  verifyResult $res "Chaincode installation on peer${PEER_NUM}.org${ORG} has failed"
+  successln "Chaincode is installed on peer${PEER_NUM}.org${ORG}"
+}
+
 # queryInstalled PEER ORG
 queryInstalled() {
   ORG=$1
@@ -285,11 +299,54 @@ chaincodeQuery() {
 ## package the chaincode
 packageChaincode
 
-## Install chaincode on peer0.org1 and peer0.org2
-infoln "Installing chaincode on peer0.org1..."
-installChaincode 1
-infoln "Install chaincode on peer0.org2..."
-installChaincode 2
+# install chaincode on all peers
+# org1
+cnt=0
+current_port=7051
+infoln "Installing chaincode on peers from org1"
+while [ $cnt -lt 4 ]
+do
+  infoln "Installing chaincode on peer${cnt} from org1, port: ${current_port}"
+  installChaincodeOnPeer 1 $current_port $cnt
+  current_port=$(($current_port+100))
+  cnt=$(($cnt+1))
+done
+
+# org2
+cnt=0
+current_port=9051
+infoln "Installing chaincode on peers from org2"
+while [ $cnt -lt 4 ]
+do
+  infoln "Installing chaincode on peer${cnt} from org2, port: ${current_port}"
+  installChaincodeOnPeer 2 $current_port $cnt
+  current_port=$(($current_port+100))
+  cnt=$(($cnt+1))
+done
+
+# org3
+cnt=0
+current_port=10051
+infoln "Installing chaincode on peers from org3"
+while [ $cnt -lt 4 ]
+do
+  infoln "Installing chaincode on peer${cnt} from org3, port: ${current_port}"
+  installChaincodeOnPeer 3 $current_port $cnt
+  current_port=$(($current_port+100))
+  cnt=$(($cnt+1))
+done
+
+# org4
+cnt=0
+current_port=11051
+infoln "Installing chaincode on peers from org4"
+while [ $cnt -lt 4 ]
+do
+  infoln "Installing chaincode on peer${cnt} from org4, port: ${current_port}"
+  installChaincodeOnPeer 4 $current_port $cnt
+  current_port=$(($current_port+100))
+  cnt=$(($cnt+1))
+done
 
 ## query whether the chaincode is installed
 queryInstalled 1
@@ -299,30 +356,56 @@ approveForMyOrg 1
 
 ## check whether the chaincode definition is ready to be committed
 ## expect org1 to have approved and org2 not to
-checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": false"
-checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": false"
+checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": false" "\"Org3MSP\": false" "\"Org4MSP\": false"
+checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": false" "\"Org3MSP\": false" "\"Org4MSP\": false"
+checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": false" "\"Org3MSP\": false" "\"Org4MSP\": false"
+checkCommitReadiness 4 "\"Org1MSP\": true" "\"Org2MSP\": false" "\"Org3MSP\": false" "\"Org4MSP\": false"
 
 ## now approve also for org2
 approveForMyOrg 2
 
 ## check whether the chaincode definition is ready to be committed
 ## expect them both to have approved
-checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": true"
-checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": true"
+checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": false" "\"Org4MSP\": false"
+checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": false" "\"Org4MSP\": false"
+checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": false" "\"Org4MSP\": false"
+checkCommitReadiness 4 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": false" "\"Org4MSP\": false"
+
+## now approve also for org3
+approveForMyOrg 3
+
+## check whether the chaincode definition is ready to be committed
+## expect them both to have approved
+checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": false"
+checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": false"
+checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": false"
+checkCommitReadiness 4 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": false"
+
+## now approve also for org3
+approveForMyOrg 4
+
+## check whether the chaincode definition is ready to be committed
+## expect them both to have approved
+checkCommitReadiness 1 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": true"
+checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": true"
+checkCommitReadiness 3 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": true"
+checkCommitReadiness 4 "\"Org1MSP\": true" "\"Org2MSP\": true" "\"Org3MSP\": true" "\"Org4MSP\": true"
 
 ## now that we know for sure both orgs have approved, commit the definition
-commitChaincodeDefinition 1 2
+commitChaincodeDefinition 1 2 3 4
 
 ## query on both orgs to see that the definition committed successfully
 queryCommitted 1
 queryCommitted 2
+queryCommitted 3
+queryCommitted 4
 
 ## Invoke the chaincode - this does require that the chaincode have the 'initLedger'
 ## method defined
 if [ "$CC_INIT_FCN" = "NA" ]; then
   infoln "Chaincode initialization is not required"
 else
-  chaincodeInvokeInit 1 2
+  chaincodeInvokeInit 1 2 3 4
 fi
 
 exit 0
