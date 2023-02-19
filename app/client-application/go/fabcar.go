@@ -1,9 +1,3 @@
-/*
-Copyright 2020 IBM All Rights Reserved.
-
-SPDX-License-Identifier: Apache-2.0
-*/
-
 package main
 
 import (
@@ -67,7 +61,7 @@ func main() {
 
 	for {
 
-		fmt.Println("Izaberite opciju:")
+		fmt.Println("Choose an option:")
 		fmt.Println("0 - Initialize ledger")
 		fmt.Println("1 - Get person by id")
 		fmt.Println("2 - Get car by id")
@@ -83,107 +77,162 @@ func main() {
 
 		switch option {
 		case 0:
+
 			_, err := contract.SubmitTransaction("InitLedger")
 			if err != nil {
 				fmt.Printf("Failed to init ledger!")
-				os.Exit(1)
 			}
+
 		case 1:
-			result, err := contract.EvaluateTransaction("GetPerson", "2")
+
+			fmt.Printf("Enter person id: ")
+			var id string
+			fmt.Scanf("%s", &id)
+
+			result, err := contract.EvaluateTransaction("GetPerson", id)
 			if err != nil {
 				fmt.Printf("Failed to get person by id!")
-				os.Exit(1)
 			}
+
 			fmt.Println(string(result))
+
 		case 2:
-			result, err := contract.EvaluateTransaction("GetCar", "c2")
+
+			fmt.Printf("Enter car id: ")
+			var id string
+			fmt.Scanf("%s", &id)
+
+			result, err := contract.EvaluateTransaction("GetCar", id)
 			if err != nil {
 				fmt.Printf("Failed to get car by id!")
-				os.Exit(1)
 			}
+
 			fmt.Println(string(result))
+
 		case 3:
-			result, err := contract.EvaluateTransaction("GetCarsByColor", "black")
+
+			fmt.Printf("Enter color: ")
+			var color string
+			fmt.Scanf("%s", &color)
+
+			result, err := contract.EvaluateTransaction("GetCarsByColor", color)
 			if err != nil {
 				fmt.Printf("Failed to get cars by color!")
-				os.Exit(1)
 			}
-			resultJson := formatJSON(result)
-			fmt.Printf("%s\n", resultJson)
+
+			resultJson := formatJson(result)
+			if len(resultJson) <= 2 {
+				fmt.Printf("There are no %s colored cars.", color)
+			} else {
+				fmt.Printf("%s\n", resultJson)
+			}
+
 		case 4:
-			result, err := contract.EvaluateTransaction("GetCarsByOwnerAndColor", "2", "white")
+
+			fmt.Printf("Enter color: ")
+			var color string
+			fmt.Scanf("%s", &color)
+
+			fmt.Printf("Enter owner id: ")
+			var ownerId string
+			fmt.Scanf("%s", &ownerId)
+
+			result, err := contract.EvaluateTransaction("GetCarsByOwnerAndColor", ownerId, color)
 			if err != nil {
 				fmt.Printf("Failed to get cars by color and owner!")
-				os.Exit(1)
 			}
-			resultJson := formatJSON(result)
+
+			resultJson := formatJson(result)
 			fmt.Printf("%s\n", resultJson)
+
 		case 5:
-			result, err := contract.SubmitTransaction("ChangeColor", "c6", "yellow")
+
+			fmt.Printf("Enter car id: ")
+			var carId string
+			fmt.Scanf("%s", &carId)
+
+			fmt.Printf("Enter new color: ")
+			var newColor string
+			fmt.Scanf("%s", &newColor)
+
+			result, err := contract.SubmitTransaction("ChangeColor", carId, newColor)
 			if err != nil {
 				fmt.Printf("Failed to change car color!")
-				os.Exit(1)
 			}
+
 			fmt.Println(string(result))
-			result, err = contract.EvaluateTransaction("GetCar", "c6")
-			if err != nil {
-				fmt.Printf("Failed to get car by id!")
-				os.Exit(1)
-			}
-			fmt.Println(string(result))
+
 		case 6:
-			result, err := contract.SubmitTransaction("RepairCar", "c2")
+
+			fmt.Printf("Enter car id: ")
+			var carId string
+			fmt.Scanf("%s", &carId)
+
+			result, err := contract.SubmitTransaction("RepairCar", carId)
 			if err != nil {
 				fmt.Printf("Failed to repair car!")
-				os.Exit(1)
 			}
+
 			fmt.Println(string(result))
-			result, err = contract.EvaluateTransaction("GetPerson", "1")
-			if err != nil {
-				fmt.Printf("Failed to get person!")
-				os.Exit(1)
-			}
-			fmt.Println(string(result))
-			result, err = contract.EvaluateTransaction("GetCar", "c2")
-			if err != nil {
-				fmt.Printf("Failed to get car by id!")
-				os.Exit(1)
-			}
-			fmt.Println(string(result))
+
 		case 7:
-			result, err := contract.SubmitTransaction("AddNewMalfunction", "c2", "novi kvar", "10.0")
+
+			fmt.Printf("Enter car id: ")
+			var carId string
+			fmt.Scanf("%s", &carId)
+
+			fmt.Printf("Enter malfunction description: ")
+			var description string
+			fmt.Scanf("%s", &description)
+
+			fmt.Printf("Enter malfunction price: ")
+			var price string
+			fmt.Scanf("%s", &price)
+
+			result, err := contract.SubmitTransaction("AddNewMalfunction", carId, description, price)
 			if err != nil {
 				fmt.Printf("Failed to add malfunction!")
-				os.Exit(1)
 			}
+
 			fmt.Println(string(result))
+
 		case 8:
-			result, err := contract.SubmitTransaction("BuyCar", "c3", "3", "false")
+
+			fmt.Printf("Enter id of the car you want to buy: ")
+			var carId string
+			fmt.Scanf("%s", &carId)
+
+			fmt.Printf("Enter buyer id: ")
+			var buyerId string
+			fmt.Scanf("%s", &buyerId)
+
+			fmt.Printf("Do you want to buy the car despite its malfunctions? (yes/no)")
+			var answer string
+			fmt.Scanf("%s", &answer)
+
+			result, err := contract.SubmitTransaction("BuyCar", carId, buyerId, answer)
 			if err != nil {
-				fmt.Printf("Failed to add malfunction!")
-				os.Exit(1)
+				fmt.Printf("Failed to buy car!")
 			}
+
 			fmt.Println(string(result))
-			fmt.Println(string(result))
-			result, err = contract.EvaluateTransaction("GetCar", "c2")
-			if err != nil {
-				fmt.Printf("Failed to get car by id!")
-				os.Exit(1)
-			}
-			fmt.Println(string(result))
+
 		case 9:
-			fmt.Println("Exited.")
-			break
+
+			fmt.Println("End program.")
+			os.Exit(1)
+
 		default:
-			fmt.Println("Izabrana je nepostojeca opcija. Pokusajte ponovo.")
+
+			fmt.Println("Chosen option does not exist! Please try again.")
 		}
 	}
 }
 
-func formatJSON(data []byte) string {
+func formatJson(data []byte) string {
 	var prettyJSON bytes.Buffer
 	if err := json.Indent(&prettyJSON, data, " ", ""); err != nil {
-		panic(fmt.Errorf("failed to parse JSON: %w", err))
+		fmt.Errorf("failed to parse json: %w", err)
 	}
 	return prettyJSON.String()
 }
