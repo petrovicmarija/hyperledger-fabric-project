@@ -51,7 +51,6 @@ joinChannel() {
 	setGlobalsPeers $ORG $PEER_PORT
 	local rc=1
 	local COUNTER=1
-	## Sometimes Join takes time, hence retry
 	while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ] ; do
 		sleep $DELAY
 		set -x
