@@ -42,9 +42,9 @@ type Malfunction struct {
 
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
 	persons := []Person {
-		{ ID: "1", Name: "Petar", Surname: "Petrovic", Email: "petar@gmail.com", Money: 430.0 },
-		{ ID: "2", Name: "Marko", Surname: "Markovic", Email: "marko@gmail.com", Money: 285.0 },
-		{ ID: "3", Name: "Stefan", Surname: "Stefanovic", Email: "stefan@gmail.com", Money: 516.0 },
+		{ ID: "1", Name: "Petar", Surname: "Petrovic", Email: "petar@gmail.com", Money: 7700.0 },
+		{ ID: "2", Name: "Marko", Surname: "Markovic", Email: "marko@gmail.com", Money: 2850.0 },
+		{ ID: "3", Name: "Stefan", Surname: "Stefanovic", Email: "stefan@gmail.com", Money: 5100.0 },
 	}
 
 	cars := []Car {
@@ -349,7 +349,7 @@ func (s *SmartContract) RepairCar(ctx contractapi.TransactionContextInterface, c
 	return true, nil
 }
 
-func (s *SmartContract) BuyCar(ctx contractapi.TransactionContextInterface, carId string, buyerId string, okayWithMalfunctions bool) (bool, error) {
+func (s *SmartContract) BuyCar(ctx contractapi.TransactionContextInterface, carId string, buyerId string, answer string) (bool, error) {
 	car, err := s.GetCar(ctx, carId)
 	if err != nil {
 		return false, err
@@ -358,6 +358,13 @@ func (s *SmartContract) BuyCar(ctx contractapi.TransactionContextInterface, carI
 	buyer, err := s.GetPerson(ctx, buyerId)
 	if err != nil {
 		return false, err
+	}
+
+	var okayWithMalfunctions bool
+	if answer == "yes" {
+		okayWithMalfunctions = true
+	} else if answer == "no" {
+		okayWithMalfunctions = false
 	}
 
 	currentOwner, err := s.GetPerson(ctx, car.Owner)
