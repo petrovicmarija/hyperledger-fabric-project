@@ -9,12 +9,35 @@ import (
 	"net/http"
 	"log"
 	"encoding/json"
-	"bytes"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/gorilla/mux"
 )
+
+type Person struct {
+	ID		string
+	Name	string
+	Surname	string
+	Email	string
+	Money	float32
+}
+
+type Car struct {
+	ID				string
+	Brand			string
+	Model			string
+	Year			int
+	Color			string
+	Owner			string
+	Malfunctions	[]Malfunction
+	Price			float32
+}
+
+type Malfunction struct {
+	Description		string
+	Price			float32
+}
 
 func main() {
 	os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
@@ -44,7 +67,10 @@ func getPersonById(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Person with provided id does not exist!")
 	}
 
-	json.NewEncoder(w).Encode(person)
+	var personJson Person
+	json.Unmarshal(person, &personJson)
+
+	json.NewEncoder(w).Encode(personJson)
 }
 
 func getCarById(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +84,10 @@ func getCarById(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Car with provided id does not exist!")
 	}
 
-	json.NewEncoder(w).Encode(car)
+	var carJson Car
+	json.Unmarshal(car, &carJson)
+
+	json.NewEncoder(w).Encode(carJson)
 }
 
 func getCarsByColor(w http.ResponseWriter, r *http.Request) {
@@ -72,9 +101,10 @@ func getCarsByColor(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "There are no cars with provided color!")
 	}
 
-	carsJson := formatJson(cars)
+	var carsJson []Car
+	json.Unmarshal(cars, &carsJson)
 
-	if len(carsJson) <= 2 {
+	if len(carsJson) == 0 {
 		fmt.Fprintf(w, "There are no %s colored cars!", color)
 	} else {
 		json.NewEncoder(w).Encode(carsJson)
@@ -179,13 +209,4 @@ func populateWallet(wallet *gateway.Wallet) error {
 	}
 
 	return nil
-}
-
-func formatJson(data []byte) string {
-	var prettyJson bytes.Buffer
-	if err := json.Indent(&prettyJson, data, " ", ""); err != nil {
-		fmt.Errorf("Failed to parse json: %w", err)
-	}
-
-	return prettyJson.String()
 }
