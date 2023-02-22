@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"log"
 	"encoding/json"
+	"bytes"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
-	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/gorilla/mux"
 )
@@ -20,11 +20,6 @@ func main() {
 	os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
 
 	handleRequests()
-
-}
-
-func helloWorld(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello world!")
 }
 
 func initLedger(w http.ResponseWriter, r *http.Request) {
@@ -32,6 +27,8 @@ func initLedger(w http.ResponseWriter, r *http.Request) {
 
 	_, err := contract.SubmitTransaction("InitLedger")
 	if err != nil {
+		fmt.Fprintf(w, "Failed to initialize ledger.")
+	} else {
 		fmt.Fprintf(w, "Ledger is successfully initialized.")
 	}
 }
@@ -64,12 +61,32 @@ func getCarById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(car)
 }
 
+func getCarsByColor(w http.ResponseWriter, r *http.Request) {
+	contract := getContract()
+
+	vars := mux.Vars(r)
+	color := vars["color"]
+
+	cars, err := contract.EvaluateTransaction("GetCarsByColor", color)
+	if err != nil {
+		fmt.Fprintf(w, "There are no cars with provided color!")
+	}
+
+	carsJson := formatJson(cars)
+
+	if len(carsJson) <= 2 {
+		fmt.Fprintf(w, "There are no %s colored cars!", color)
+	} else {
+		json.NewEncoder(w).Encode(carsJson)
+	}
+}
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/", helloWorld)
 	myRouter.HandleFunc("/ledger", initLedger)
 	myRouter.HandleFunc("/ledger/persons/{id}", getPersonById)
 	myRouter.HandleFunc("/ledger/cars/{id}", getCarById)
+	myRouter.HandleFunc("/ledger/cars/colored/{color}", getCarsByColor)
 
 	log.Fatal(http.ListenAndServe(":10000", myRouter))
 }
@@ -90,7 +107,7 @@ func getContract() *gateway.Contract {
 	}
 
 	ccpPath := filepath.Join(
-		// "..",
+		"..",
 		"..",
 		"test-network",
 		"organizations",
@@ -116,16 +133,12 @@ func getContract() *gateway.Contract {
 		os.Exit(1)
 	}
 
-	// contract := network.GetContract("carcc")
-
-	// return &contract
-
 	return network.GetContract("carcc")
 }
 
 func populateWallet(wallet *gateway.Wallet) error {
 	credPath := filepath.Join(
-		// "..",
+		"..",
 		"..",
 		"test-network",
 		"organizations",
@@ -166,4 +179,13 @@ func populateWallet(wallet *gateway.Wallet) error {
 	}
 
 	return nil
+}
+
+func formatJson(data []byte) string {
+	var prettyJson bytes.Buffer
+	if err := json.Indent(&prettyJson, data, " ", ""); err != nil {
+		fmt.Errorf("Failed to parse json: %w", err)
+	}
+
+	return prettyJson.String()
 }
